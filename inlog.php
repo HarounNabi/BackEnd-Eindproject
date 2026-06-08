@@ -61,7 +61,7 @@ if (isset($_POST['login'])) {
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body class="flex flex-col min-h-screen justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+<body class="flex flex-col min-h-screen justify-center items-center py-12 px-4 sm:px-6 lg:px-8 scroll-8">
 
     <div class="w-full max-w-4xl space-y-8">
         <div class="flex justify-start">
@@ -121,7 +121,16 @@ if (isset($_POST['login'])) {
 
         </div>
     </div>
-
+    <footer class="bg-gray-950 light-bg-white border-t border-gray-800 light-border-gray-200 py-6 mt-auto transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 light-text-gray-600">
+            <p>&copy; <?= date("Y"); ?> TechShop. Alle rechten voorbehouden.</p>
+            <div class="flex gap-6">
+                <a href="#" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Algemene Voorwaarden</a>
+                <a href="#" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Privacybeleid</a>
+                <a href="mailto:haroun.9707@gmail.com" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Contact</a>
+            </div>
+        </div>
+    </footer>
 </body>
 
 </html>
