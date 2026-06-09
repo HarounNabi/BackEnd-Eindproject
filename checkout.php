@@ -7,179 +7,173 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 
-if (empty($_SESSION['cart']) && !isset($_POST['place_order'])) {
+if (empty($_SESSION['cart'])) {
     header("Location: home.php");
     exit();
 }
 
-$order_success = false;
+$error = '';
+$success = '';
+
 $totaal = 0;
-$items_to_display = [];
-
-if (!empty($_SESSION['cart'])) {
-    foreach ($_SESSION['cart'] as $id => $aantal) {
-        $query = $pdo->prepare("SELECT * FROM items WHERE id = :id");
-        $query->execute([':id' => $id]);
-        $product = $query->fetch();
-
-        if ($product) {
-            $subtotaal = $product['prijs'] * $aantal;
-            $totaal += $subtotaal;
-            $items_to_display[] = [
-                'naam' => $product['naam'],
-                'aantal' => $aantal,
-                'subtotaal' => $subtotaal
-            ];
-        }
+foreach ($_SESSION['cart'] as $id => $aantal) {
+    $query = $pdo->prepare("SELECT prijs FROM items WHERE id = :id");
+    $query->execute([':id' => $id]);
+    $product = $query->fetch();
+    if ($product) {
+        $totaal += $product['prijs'] * $aantal;
     }
 }
 
-if (isset($_POST['place_order'])) {
-    unset($_SESSION['cart']);
-    $order_success = true;
+if (isset($_POST['plaats_bestelling'])) {
+    $voornaam = $_POST['voornaam'];
+    $achternaam = $_POST['achternaam'];
+    $nummer = $_POST['nummer'];
+    $email = $_POST['email'];
+    $straatnaam = $_POST['straatnaam'];
+    $huisnummer = $_POST['huisnummer'];
+    $postcode = $_POST['postcode'];
+    $woonplaats = $_POST['woonplaats'];
+    $betaalmethode = $_POST['betaalmethode'];
+
+    if ($voornaam != '' && $achternaam != '' && $nummer != '' && $email != '' && $straatnaam != '' && $huisnummer != '' && $postcode != '' && $woonplaats != '') {
+
+        $insert = $pdo->prepare("INSERT INTO bestellingen (gebruikersnaam, voornaam, achternaam, telefoonnummer, email, straatnaam, huisnummer, postcode, woonplaats, betaalmethode, totaal_bedrag) VALUES (:gebruikersnaam, :voornaam, :achternaam, :nummer, :email, :straatnaam, :huisnummer, :postcode, :woonplaats, :betaalmethode, :totaal)");
+
+        $insert->execute([
+            ':gebruikersnaam' => $_SESSION['user'],
+            ':voornaam' => $voornaam,
+            ':achternaam' => $achternaam,
+            ':nummer' => $nummer,
+            ':email' => $email,
+            ':straatnaam' => $straatnaam,
+            ':huisnummer' => $huisnummer,
+            ':postcode' => $postcode,
+            ':woonplaats' => $woonplaats,
+            ':betaalmethode' => $betaalmethode,
+            ':totaal' => $totaal
+        ]);
+
+        $bestelling_id = $pdo->lastInsertId();
+
+        foreach ($_SESSION['cart'] as $id => $aantal) {
+            $productQuery = $pdo->prepare("SELECT prijs FROM items WHERE id = :id");
+            $productQuery->execute([':id' => $id]);
+            $product = $productQuery->fetch();
+
+            if ($product) {
+                $insertItem = $pdo->prepare("INSERT INTO bestelling_items (bestelling_id, item_id, aantal, prijs) VALUES (:bestelling_id, :item_id, :aantal, :prijs)");
+                $insertItem->execute([
+                    ':bestelling_id' => $bestelling_id,
+                    ':item_id' => $id,
+                    ':aantal' => $aantal,
+                    ':prijs' => $product['prijs']
+                ]);
+            }
+        }
+
+        unset($_SESSION['cart']);
+        $success = "Je bestelling is succesvol geplaatst!";
+    } else {
+        $error = "Vul alle velden in.";
+    }
 }
 ?>
 <!DOCTYPE html>
-<html lang="nl" class="h-full">
+<html lang="nl" class="h-full bg-gray-900 text-gray-100">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechShop - Afrekenen</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <style type="text/css">
-        :has(#theme-toggle-input:checked) .light-bg-white {
-            background-color: #ffffff;
-        }
-
-        :has(#theme-toggle-input:checked) .light-bg-gray-50 {
-            background-color: #f9fafb;
-        }
-
-        :has(#theme-toggle-input:checked) .light-text-gray-900 {
-            color: #111827;
-        }
-
-        :has(#theme-toggle-input:checked) .light-text-gray-600 {
-            color: #4b5563;
-        }
-
-        :has(#theme-toggle-input:checked) .light-text-gray-700 {
-            color: #374151;
-        }
-
-        :has(#theme-toggle-input:checked) .light-border-gray-200 {
-            border-color: #e5e7eb;
-        }
-
-        :has(#theme-toggle-input:checked) .light-hover-bg-gray-100:hover {
-            background-color: #f3f4f6;
-        }
-    </style>
 </head>
 
-<body class="flex flex-col min-h-screen bg-gray-900 text-gray-100 light-bg-gray-50 light-text-gray-900 transition-colors duration-200">
+<body class="flex flex-col min-h-screen justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
 
-    <input type="checkbox" id="theme-toggle-input" class="hidden">
-
-    <header class="bg-gray-950 light-bg-white border-b border-gray-800 light-border-gray-200 fixed top-0 left-0 w-full z-50 transition-colors duration-200">
-        <div class="w-full px-8 h-20 flex items-center justify-between">
-
-            <a href="home.php" class="flex items-center shrink-0">
-                <img src="logo.png" alt="TechShop Logo" class="h-14 w-auto object-contain">
-            </a>
-
-            <nav class="flex items-center gap-6">
-                <?php if (isset($_SESSION['user']) && $_SESSION['user'] == 'Admin'): ?>
-                    <a href="admin.php" class="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5">⚙ Admin Panel</a>
-                <?php endif; ?>
-
-                <a href="home.php" class="text-sm font-medium text-gray-200 light-text-gray-700 hover:text-white transition-colors">Producten</a>
-                <a href="winkelwagen.php" class="text-sm font-medium text-gray-200 light-text-gray-700 hover:text-white transition-colors flex items-center gap-1">🛒 Winkelwagen</a>
-
-                <label for="theme-toggle-input" class="cursor-pointer text-lg p-2 rounded-xl hover:bg-gray-900/50 light-hover-bg-gray-100 transition-colors select-none">
-                    🌓
-                </label>
-
-                <?php if (isset($_SESSION['user'])): ?>
-                    <span class="text-xs bg-gray-900 light-bg-gray-50 border border-gray-800 light-border-gray-200 px-3 py-1.5 rounded-full text-gray-400 light-text-gray-700">
-                        Gebruiker: <b class="text-gray-200 light-text-gray-900"><?= htmlspecialchars($_SESSION['user']) ?></b>
-                    </span>
-                    <a href="loguit.php" class="text-sm font-medium text-red-400 hover:text-red-600 transition-colors">Uitloggen</a>
-                <?php endif; ?>
-            </nav>
-
+    <div class="w-full max-w-xl space-y-8">
+        <div class="text-center">
+            <h1 class="text-4xl font-extrabold text-white tracking-wider">TECH<span class="text-blue-500">SHOP</span></h1>
         </div>
-    </header>
 
-    <main class="grow max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 flex flex-col justify-center">
+        <?php if ($error != ''): ?>
+            <div class="p-4 rounded-xl bg-red-950/50 border border-red-800 text-red-400 text-sm text-center"><?= $error ?></div>
+        <?php endif; ?>
 
-        <?php if ($order_success): ?>
-            <div class="text-center space-y-6 py-12">
-                <div class="text-7xl">🎉</div>
-                <h1 class="text-5xl font-black tracking-tight text-white light-text-gray-900">Het is je gelukt!</h1>
-                <p class="text-gray-400 light-text-gray-700 text-lg max-w-md mx-auto">Je bestelling is succesvol verwerkt en de winkelwagen is geleegd. Bedankt voor je aankoop!</p>
-
-                <div class="pt-4">
-                    <a href="home.php" class="inline-flex bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-blue-600/10 transition-all text-center">
-                        Wil je verder shoppen?
-                    </a>
-                </div>
+        <?php if ($success != ''): ?>
+            <div class="p-4 rounded-xl bg-green-950/50 border border-green-800 text-green-400 text-sm text-center">
+                <?= $success ?><br>
+                <a href="home.php" class="text-white underline font-bold block mt-2">Terug naar de winkel</a>
             </div>
-
         <?php else: ?>
-            <h2 class="text-3xl font-extrabold tracking-tight text-white light-text-gray-900 mb-8">Bestelling Controleren</h2>
 
-            <div class="bg-gray-950 light-bg-white rounded-2xl border border-gray-800 light-border-gray-200 shadow-xl overflow-hidden p-6 md:p-8 space-y-6 transition-colors duration-200">
+            <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 shadow-2xl">
+                <h2 class="text-2xl font-bold mb-6 text-center text-white">Gegevens Invullen</h2>
 
-                <div class="border-b border-gray-800 light-border-gray-200 pb-4">
-                    <h3 class="text-lg font-bold text-gray-200 light-text-gray-900 mb-1">Overzicht van je producten</h3>
-                    <p class="text-xs text-gray-500 light-text-gray-700">Controleer je winkelmand voordat je de aankoop definitief maakt.</p>
-                </div>
+                <form action="checkout.php" method="POST" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Voornaam:</label>
+                            <input type="text" name="voornaam" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Achternaam:</label>
+                            <input type="text" name="achternaam" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                        </div>
+                    </div>
 
-                <ul class="divide-y divide-gray-800/40 light-border-gray-200">
-                    <?php foreach ($items_to_display as $item): ?>
-                        <li class="py-4 flex justify-between items-center text-sm">
-                            <div>
-                                <span class="font-semibold text-gray-200 light-text-gray-900"><?= htmlspecialchars($item['naam']) ?></span>
-                                <span class="text-xs text-gray-500 light-text-gray-700 ml-2">x<?= $item['aantal'] ?></span>
-                            </div>
-                            <span class="font-medium text-gray-300 light-text-gray-900">€<?= number_format($item['subtotaal'], 2, ',', '.') ?></span>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Telefoonnummer:</label>
+                            <input type="text" name="nummer" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">E-mailadres:</label>
+                            <input type="email" name="email" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                        </div>
+                    </div>
 
-                <div class="bg-gray-900 light-bg-gray-50 rounded-xl p-4 flex justify-between items-center border border-gray-850 light-border-gray-200">
-                    <span class="text-sm font-semibold text-gray-400 light-text-gray-700">Totaal te betalen bedrag:</span>
-                    <span class="text-2xl font-black text-blue-400">€<?= number_format($totaal, 2, ',', '.') ?></span>
-                </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-xs text-gray-400 mb-1">Straatnaam:</label>
+                            <input type="text" name="straatnaam" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Huisnummer:</label>
+                            <input type="text" name="huisnummer" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                        </div>
+                    </div>
 
-                <div class="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <a href="winkelwagen.php" class="text-sm text-gray-500 hover:text-gray-400 light:hover:text-gray-900 transition-colors">
-                        ← Terug naar winkelwagen
-                    </a>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Postcode:</label>
+                            <input type="text" name="postcode" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Woonplaats:</label>
+                            <input type="text" name="woonplaats" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                        </div>
+                    </div>
 
-                    <form action="checkout.php" method="POST" class="w-full sm:w-auto">
-                        <button type="submit" name="place_order" class="w-full sm:w-auto cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-emerald-600/10 transition-all text-center tracking-wide">
-                            Bestelling Plaatsen
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Betaalmethode:</label>
+                        <select name="betaalmethode" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
+                            <option value="iDEAL">iDEAL | Wero</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="Creditcard">Creditcard</option>
+                        </select>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-800 flex justify-between items-center">
+                        <p class="text-xl font-bold text-white">Totaal: €<?= number_format($totaal, 2, ',', '.') ?></p>
+                        <button type="submit" name="plaats_bestelling" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl transition-all cursor-pointer">
+                            Bestelling plaatsen
                         </button>
-                    </form>
-                </div>
-
+                    </div>
+                </form>
             </div>
         <?php endif; ?>
-    </main>
-
-    <footer class="bg-gray-950 light-bg-white border-t border-gray-800 light-border-gray-200 py-6 mt-auto transition-colors duration-200">
-        <div class="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 light-text-gray-600">
-            <p>&copy; <?= date("Y"); ?> TechShop. Alle rechten voorbehouden.</p>
-            <div class="flex gap-6">
-                <a href="#" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Algemene Voorwaarden</a>
-                <a href="#" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Privacybeleid</a>
-                <a href="mailto:haroun.9707@gmail.com" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Contact</a>
-            </div>
-        </div>
-    </footer>
+    </div>
 
 </body>
 

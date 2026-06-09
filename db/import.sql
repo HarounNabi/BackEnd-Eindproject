@@ -15,6 +15,29 @@ CREATE TABLE IF NOT EXISTS gebruikers (
     gebruikersnaam VARCHAR(50) NOT NULL UNIQUE,
     wachtwoord VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE bestellingen (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    gebruikersnaam VARCHAR(50) NOT NULL,
+    voornaam VARCHAR(100) NOT NULL,
+    achternaam VARCHAR(100) NOT NULL,
+    telefoonnummer VARCHAR(20) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    straatnaam VARCHAR(150) NOT NULL,
+    huisnummer VARCHAR(20) NOT NULL,
+    postcode VARCHAR(20) NOT NULL,
+    woonplaats VARCHAR(100) NOT NULL,
+    betaalmethode VARCHAR(50) NOT NULL,
+    totaal_bedrag DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE bestelling_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    bestelling_id INT NOT NULL,
+    item_id MEDIUMINT NOT NULL,
+    aantal INT NOT NULL,
+    prijs DECIMAL(10,2) NOT NULL
+);
 INSERT INTO `items` (`naam`, `rating`, `prijs`, `foto_url`) VALUES
 ('MSI Sword 16 HX Gaming Laptop (i7 / RTX 4060)', 4.7, 1249.00, 'https://www.megekko.nl/productimg/1119954/nw/1_MSI-Sword-16-HX-B14VFKG-015NL-Core-i7-RTX-4060-Gaming-laptop.jpg'),
 ('Logitech G Pro X Superlight Gaming Mouse Black', 4.9, 119.00, 'https://resource.logitechg.com/c_fill,q_auto,f_auto,dpr_1.0/d_transparent.gif/content/dam/gaming/en/products/pro-x-superlight-2c-pdp/gallery/pro-x-superlight-2c-mouse-top-angle-black-gallery-1.png'),

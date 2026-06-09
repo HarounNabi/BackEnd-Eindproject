@@ -2,194 +2,152 @@
 session_start();
 include_once 'db/db.php';
 
-if (!isset($_SESSION['user']) || $_SESSION['user'] != 'Admin') {
+if (!isset($_SESSION['user']) || $_SESSION['user'] !== 'Admin') {
     header("Location: inlog.php");
     exit();
 }
 
-$message = '';
+$tab = isset($_GET['tab']) ? $_GET['tab'] : 'producten';
 
-if (isset($_POST['submit'])) {
-    $naam = $_POST['naam'];
-    $prijs = $_POST['prijs'];
-    $rating = $_POST['rating'];
-    $foto_url = $_POST['foto_url'];
+$bestellingen = [];
+$producten_lijst = [];
 
-    if ($naam != '' && $prijs != '' && $foto_url != '') {
-        $query = $pdo->prepare("INSERT INTO items (naam, prijs, rating, foto_url) VALUES (:naam, :prijs, :rating, :foto_url)");
-        $query->execute([
-            ':naam' => $naam,
-            ':prijs' => $prijs,
-            ':rating' => $rating,
-            ':foto_url' => $foto_url
-        ]);
-        $message = "Product succesvol toegevoegd!";
-    } else {
-        $message = "Vul alle verplichte velden in.";
-    }
+if ($tab === 'bestellingen') {
+    $query = $pdo->query("SELECT * FROM bestellingen ORDER BY id DESC");
+    $bestellingen = $query->fetchAll();
+} else {
+    $query = $pdo->query("SELECT * FROM items ORDER BY id DESC");
+    $producten_lijst = $query->fetchAll();
 }
-
-$items_query = $pdo->query("SELECT * FROM items");
 ?>
 <!DOCTYPE html>
-<html lang="nl" class="h-full">
+<html lang="nl" class="h-full bg-gray-900 text-gray-100">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechShop - Admin Panel</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <style type="text/css">
-        /* Custom scrollbar behouden voor het assortiment */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #374151;
-            border-radius: 10px;
-        }
-
-        :has(#theme-toggle-input:checked) .light-bg-white {
-            background-color: #ffffff;
-        }
-
-        :has(#theme-toggle-input:checked) .light-bg-gray-50 {
-            background-color: #f9fafb;
-        }
-
-        :has(#theme-toggle-input:checked) .light-text-gray-900 {
-            color: #111827;
-        }
-
-        :has(#theme-toggle-input:checked) .light-text-gray-700 {
-            color: #374151;
-        }
-
-        :has(#theme-toggle-input:checked) .light-border-gray-200 {
-            border-color: #e5e7eb;
-        }
-
-        :has(#theme-toggle-input:checked) .light-hover-bg-gray-100:hover {
-            background-color: #f3f4f6;
-        }
-    </style>
 </head>
 
-<body class="flex flex-col min-h-screen bg-gray-900 text-gray-100 light-bg-gray-50 light-text-gray-900 transition-colors duration-200">
+<body class="bg-gray-900 text-gray-100 p-8">
 
-    <input type="checkbox" id="theme-toggle-input" class="hidden">
+    <div class="max-w-6xl mx-auto space-y-6">
 
-    <header class="bg-gray-950 light-bg-white border-b border-gray-800 light-border-gray-200 fixed top-0 left-0 w-full z-50 transition-colors duration-200">
-        <div class="w-full px-8 h-20 flex items-center justify-between">
-
-            <a href="home.php" class="flex items-center shrink-0">
-                <img src="logo.png" alt="TechShop Logo" class="h-14 w-auto object-contain">
-            </a>
-
-            <nav class="flex items-center gap-6">
-                <?php if (isset($_SESSION['user']) && $_SESSION['user'] == 'Admin'): ?>
-                    <a href="admin.php" class="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5">⚙ Admin Panel</a>
-                <?php endif; ?>
-
-                <a href="home.php" class="text-sm font-medium text-gray-200 light-text-gray-700 hover:text-white transition-colors">Producten</a>
-                <a href="winkelwagen.php" class="text-sm font-medium text-gray-200 light-text-gray-700 hover:text-white transition-colors flex items-center gap-1">🛒 Winkelwagen</a>
-
-                <label for="theme-toggle-input" class="cursor-pointer text-lg p-2 rounded-xl hover:bg-gray-900/50 light-hover-bg-gray-100 transition-colors select-none">
-                    🌓
-                </label>
-
-                <?php if (isset($_SESSION['user'])): ?>
-                    <span class="text-xs bg-gray-900 light-bg-gray-50 border border-gray-800 light-border-gray-200 px-3 py-1.5 rounded-full text-gray-400 light-text-gray-700">
-                        Gebruiker: <b class="text-gray-200 light-text-gray-900"><?= htmlspecialchars($_SESSION['user']) ?></b>
-                    </span>
-                    <a href="loguit.php" class="text-sm font-medium text-red-400 hover:text-red-600 transition-colors">Uitloggen</a>
-                <?php endif; ?>
-            </nav>
-
-        </div>
-    </header>
-
-    <main class="grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-10">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-
-            <div class="bg-gray-950 light-bg-white p-6 rounded-2xl border border-gray-800 light-border-gray-200 shadow-xl h-fit">
-                <h2 class="text-2xl font-bold mb-6 text-white light-text-gray-900 tracking-wide">Nieuw Product Toevoegen</h2>
-
-                <?php if ($message != ''): ?>
-                    <div class="mb-6 p-4 rounded-xl bg-blue-950/50 border border-blue-800 text-blue-300 text-sm font-medium">
-                        <?= $message ?>
-                    </div>
-                <?php endif; ?>
-
-                <form action="admin.php" method="POST" class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 light-text-gray-700 mb-2">Productnaam:</label>
-                        <input type="text" name="naam" required class="w-full bg-gray-900 light-bg-white border border-gray-700 light-border-gray-200 rounded-xl px-4 py-3 text-white light-text-gray-900 focus:outline-none focus:border-blue-500 transition-colors">
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-400 light-text-gray-700 mb-2">Prijs (€):</label>
-                            <input type="number" name="prijs" step="0.01" required class="w-full bg-gray-900 light-bg-white border border-gray-700 light-border-gray-200 rounded-xl px-4 py-3 text-white light-text-gray-900 focus:outline-none focus:border-blue-500 transition-colors">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-400 light-text-gray-700 mb-2">Rating (1-5):</label>
-                            <input type="number" name="rating" step="0.1" min="1" max="5" class="w-full bg-gray-900 light-bg-white border border-gray-700 light-border-gray-200 rounded-xl px-4 py-3 text-white light-text-gray-900 focus:outline-none focus:border-blue-500 transition-colors">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-400 light-text-gray-700 mb-2">Afbeelding URL:</label>
-                        <input type="url" name="foto_url" required class="w-full bg-gray-900 light-bg-white border border-gray-700 light-border-gray-200 rounded-xl px-4 py-3 text-white light-text-gray-900 focus:outline-none focus:border-blue-500 transition-colors">
-                    </div>
-
-                    <button type="submit" name="submit" class="w-full cursor-pointer bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg shadow-blue-600/10 transition-all text-center">
-                        Product Opslaan
-                    </button>
-                </form>
+        <div class="flex justify-between items-center border-b border-gray-800 pb-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-white">Admin Panel</h1>
+                <p class="text-sm text-gray-400">Welkom terug, Admin</p>
             </div>
+            <a href="home.php" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-xl text-sm transition-colors">
+                Naar Webshop
+            </a>
+        </div>
 
-            <div class="bg-gray-950 light-bg-white p-6 rounded-2xl border border-gray-800 light-border-gray-200 shadow-xl flex flex-col h-[600px]">
-                <h2 class="text-2xl font-bold mb-6 text-white light-text-gray-900 tracking-wide">Huidig Assortiment</h2>
-                <div class="overflow-y-auto grow rounded-xl border border-gray-800 light-border-gray-200 custom-scrollbar">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-900 light-bg-gray-50 sticky top-0 border-b border-gray-800 light-border-gray-200">
-                            <tr>
-                                <th class="p-4 text-xs font-semibold uppercase tracking-wider text-gray-400 light-text-gray-700">ID</th>
-                                <th class="p-4 text-xs font-semibold uppercase tracking-wider text-gray-400 light-text-gray-700">Naam</th>
-                                <th class="p-4 text-xs font-semibold uppercase tracking-wider text-gray-400 light-text-gray-700">Prijs</th>
+        <div class="flex gap-4 border-b border-gray-800 pb-2">
+            <a href="admin.php?tab=producten" class="px-4 py-2 rounded-lg font-semibold text-sm transition-colors <?= $tab === 'producten' ? 'bg-blue-600 text-white' : 'bg-gray-950 text-gray-400 hover:text-white' ?>">
+                Producten Beheren
+            </a>
+            <a href="admin.php?tab=bestellingen" class="px-4 py-2 rounded-lg font-semibold text-sm transition-colors <?= $tab === 'bestellingen' ? 'bg-blue-600 text-white' : 'bg-gray-950 text-gray-400 hover:text-white' ?>">
+                Bestellingen Bekijken
+            </a>
+        </div>
+
+        <?php if ($tab === 'producten'): ?>
+            <div class="bg-gray-950 p-6 rounded-2xl border border-gray-800 space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-white">Je Producten</h2>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-gray-500 border-b border-gray-800">
+                                <th class="pb-2">Foto</th>
+                                <th class="pb-2">Naam</th>
+                                <th class="pb-2 text-right">Prijs</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-800/50 light-border-gray-200">
-                            <?php while ($item = $items_query->fetch()): ?>
-                                <tr class="hover:bg-gray-900/40 transition-colors">
-                                    <td class="p-4 text-sm font-mono text-gray-500">#<?= $item['id'] ?></td>
-                                    <td class="p-4 text-sm font-medium text-gray-200 light-text-gray-900"><?= htmlspecialchars($item['naam']) ?></td>
-                                    <td class="p-4 text-sm font-semibold text-blue-400">€<?= number_format($item['prijs'], 2, ',', '.') ?></td>
+                        <tbody class="text-gray-300 divide-y divide-gray-900">
+                            <?php foreach ($producten_lijst as $p): ?>
+                                <tr>
+                                    <td class="py-2"><img src="<?= $p['foto_url'] ?>" class="h-10 w-10 object-contain rounded bg-white p-0.5"></td>
+                                    <td class="py-2 font-medium text-white"><?= htmlspecialchars($p['naam']) ?></td>
+                                    <td class="py-2 text-right font-mono">€<?= number_format($p['prijs'], 2, ',', '.') ?></td>
                                 </tr>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
+        <?php endif; ?>
 
-        </div>
-    </main>
-    <footer class="bg-gray-950 light-bg-white border-t border-gray-800 light-border-gray-200 py-6 mt-auto transition-colors duration-200">
-        <div class="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 light-text-gray-600">
-            <p>&copy; <?= date("Y"); ?> TechShop. Alle rechten voorbehouden.</p>
-            <div class="flex gap-6">
-                <a href="#" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Algemene Voorwaarden</a>
-                <a href="#" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Privacybeleid</a>
-                <a href="mailto:haroun.9707@gmail.com" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Contact</a>
-            </div>
-        </div>
-    </footer>
+        <?php if ($tab === 'bestellingen'): ?>
+            <?php if (empty($bestellingen)): ?>
+                <p class="text-gray-400">Er zijn nog geen bestellingen geplaatst.</p>
+            <?php else: ?>
+
+                <div class="space-y-6">
+                    <?php foreach ($bestellingen as $bestelling): ?>
+                        <div class="bg-gray-950 p-6 rounded-2xl border border-gray-800 space-y-4">
+
+                            <div class="flex flex-col md:flex-row justify-between border-b border-gray-800 pb-4 gap-2">
+                                <div>
+                                    <h2 class="text-xl font-bold text-blue-400">Bestelling #<?= $bestelling['id'] ?></h2>
+                                    <p class="text-sm text-gray-400">Klant: <?= htmlspecialchars($bestelling['voornaam']) . " " . htmlspecialchars($bestelling['achternaam']) ?> (Account: <?= htmlspecialchars($bestelling['gebruikersnaam']) ?>)</p>
+                                </div>
+                                <div class="text-left md:text-right text-sm text-gray-400">
+                                    <p>Adres: <?= htmlspecialchars($bestelling['straatnaam']) . " " . htmlspecialchars($bestelling['huisnummer']) ?>, <?= htmlspecialchars($bestelling['postcode']) ?> <?= htmlspecialchars($bestelling['woonplaats']) ?></p>
+                                    <p>Tel: <?= htmlspecialchars($bestelling['telefoonnummer']) ?> | E-mail: <?= htmlspecialchars($bestelling['email']) ?></p>
+                                </div>
+                            </div>
+
+                            <?php
+                            $itemsQuery = $pdo->prepare("
+                                SELECT bestelling_items.*, items.naam 
+                                FROM bestelling_items 
+                                JOIN items ON bestelling_items.item_id = items.id 
+                                WHERE bestelling_items.bestelling_id = :bestelling_id
+                            ");
+                            $itemsQuery->execute([':bestelling_id' => $bestelling['id']]);
+                            $producten_in_bestelling = $itemsQuery->fetchAll();
+                            ?>
+
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead>
+                                        <tr class="text-gray-500 border-b border-gray-800">
+                                            <th class="pb-2">Product</th>
+                                            <th class="pb-2 text-center">Aantal</th>
+                                            <th class="pb-2 text-right">Prijs per stuk</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-gray-300 divide-y divide-gray-900">
+                                        <?php foreach ($producten_in_bestelling as $p): ?>
+                                            <tr>
+                                                <td class="py-2"><?= htmlspecialchars($p['naam']) ?></td>
+                                                <td class="py-2 text-center font-mono"><?= $p['aantal'] ?>x</td>
+                                                <td class="py-2 text-right font-mono">€<?= number_format($p['prijs'], 2, ',', '.') ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-2 border-t border-gray-800 text-sm">
+                                <p class="text-gray-400">Betaalmethode: <span class="text-gray-200 font-semibold"><?= htmlspecialchars($bestelling['betaalmethode']) ?></span></p>
+                                <p class="text-lg font-bold text-white">Totaal betaald: €<?= number_format($bestelling['totaal_bedrag'], 2, ',', '.') ?></p>
+                            </div>
+
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+            <?php endif; ?>
+        <?php endif; ?>
+
+    </div>
+
 </body>
 
 </html>

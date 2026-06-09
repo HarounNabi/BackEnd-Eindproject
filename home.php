@@ -18,7 +18,6 @@ $all_items = $pdo->query("SELECT * FROM items");
     <title>TechShop - Home</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style type="text/css">
-        /* We gebruiken pure CSS om de lichte modus classes te activeren als de checkbox aan staat */
         :has(#theme-toggle-input:checked) .light-bg-white {
             background-color: #ffffff;
         }
