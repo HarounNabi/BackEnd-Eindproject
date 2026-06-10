@@ -80,101 +80,119 @@ if (isset($_POST['plaats_bestelling'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="nl" class="h-full bg-gray-900 text-gray-100">
+<html lang="nl" class="h-full">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechShop - Afrekenen</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/css">
+        :has(#theme-toggle-input:checked) .light-bg-white { background-color: #ffffff; }
+        :has(#theme-toggle-input:checked) .light-bg-gray-50 { background-color: #f9fafb; }
+        :has(#theme-toggle-input:checked) .light-text-gray-900 { color: #111827; }
+        :has(#theme-toggle-input:checked) .light-text-gray-700 { color: #374151; }
+        :has(#theme-toggle-input:checked) .light-border-gray-200 { border-color: #e5e7eb; }
+        :has(#theme-toggle-input:checked) .light-text-black { color: #000000; }
+        :has(#theme-toggle-input:checked) .light-hover-text-black:hover { color: #000000; }
+        :has(#theme-toggle-input:checked) .light-hover-bg-gray-100:hover { background-color: #f3f4f6; }
+    </style>
 </head>
 
-<body class="flex flex-col min-h-screen justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+<body class="bg-gray-900 text-gray-100 light-bg-gray-50 light-text-gray-900 transition-colors duration-200 min-h-screen">
 
-    <div class="w-full max-w-xl space-y-8">
-        <div class="text-center">
-            <h1 class="text-4xl font-extrabold text-white tracking-wider">TECH<span class="text-blue-500">SHOP</span></h1>
+    <input type="checkbox" id="theme-toggle-input" class="hidden">
+
+    <header class="bg-gray-950 light-bg-white border-b border-gray-800 light-border-gray-200 fixed top-0 left-0 w-full z-50 transition-colors duration-200">
+        <div class="w-full px-8 h-20 flex items-center justify-between">
+            <a href="home.php" class="flex items-center shrink-0">
+                <img src="logo.png" alt="TechShop Logo" class="h-14 w-auto object-contain">
+            </a>
+            <nav class="flex items-center gap-6">
+                <a href="home.php" class="text-sm font-medium text-gray-200 light-text-gray-700 hover:text-white light-hover-text-black transition-colors">Producten</a>
+                <label for="theme-toggle-input" class="cursor-pointer text-lg p-2 rounded-xl hover:bg-gray-900/50 light-hover-bg-gray-100 transition-colors select-none">🌓</label>
+            </nav>
         </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 pt-28 pb-12">
+        <h1 class="text-3xl font-extrabold text-white light-text-gray-900 mb-8">Afrekenen</h1>
 
         <?php if ($error != ''): ?>
-            <div class="p-4 rounded-xl bg-red-950/50 border border-red-800 text-red-400 text-sm text-center"><?= $error ?></div>
+            <div class="p-4 mb-6 rounded-xl bg-red-950/30 border border-red-800 text-red-400 text-sm"><?= $error ?></div>
         <?php endif; ?>
 
         <?php if ($success != ''): ?>
-            <div class="p-4 rounded-xl bg-green-950/50 border border-green-800 text-green-400 text-sm text-center">
-                <?= $success ?><br>
-                <a href="home.php" class="text-white underline font-bold block mt-2">Terug naar de winkel</a>
+            <div class="bg-gray-950 light-bg-white p-8 rounded-2xl border border-gray-800 light-border-gray-200 text-center">
+                <h2 class="text-xl font-bold mb-2">Bedankt voor je bestelling!</h2>
+                <p class="text-gray-400 light-text-gray-700 mb-6"><?= $success ?></p>
+                <a href="home.php" class="bg-blue-600 text-white font-medium py-2 px-6 rounded-xl hover:bg-blue-500 transition-colors">Terug naar de winkel</a>
             </div>
         <?php else: ?>
 
-            <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 shadow-2xl">
-                <h2 class="text-2xl font-bold mb-6 text-center text-white">Gegevens Invullen</h2>
-
-                <form action="checkout.php" method="POST" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Voornaam:</label>
-                            <input type="text" name="voornaam" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Achternaam:</label>
-                            <input type="text" name="achternaam" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Telefoonnummer:</label>
-                            <input type="text" name="nummer" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">E-mailadres:</label>
-                            <input type="email" name="email" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="col-span-2">
-                            <label class="block text-xs text-gray-400 mb-1">Straatnaam:</label>
-                            <input type="text" name="straatnaam" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Huisnummer:</label>
-                            <input type="text" name="huisnummer" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Postcode:</label>
-                            <input type="text" name="postcode" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-400 mb-1">Woonplaats:</label>
-                            <input type="text" name="woonplaats" required class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                        </div>
-                    </div>
-
+            <form action="checkout.php" method="POST" class="bg-gray-950 light-bg-white p-6 md:p-8 rounded-2xl border border-gray-800 light-border-gray-200 shadow-xl">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">Betaalmethode:</label>
-                        <select name="betaalmethode" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-white">
-                            <option value="iDEAL">iDEAL | Wero</option>
-                            <option value="PayPal">PayPal</option>
-                            <option value="Creditcard">Creditcard</option>
-                        </select>
+                        <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">Voornaam</label>
+                        <input type="text" name="voornaam" required class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">Achternaam</label>
+                        <input type="text" name="achternaam" required class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                </div>
 
-                    <div class="pt-4 border-t border-gray-800 flex justify-between items-center">
-                        <p class="text-xl font-bold text-white">Totaal: €<?= number_format($totaal, 2, ',', '.') ?></p>
-                        <button type="submit" name="plaats_bestelling" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl transition-all cursor-pointer">
-                            Bestelling plaatsen
-                        </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">Telefoonnummer</label>
+                        <input type="text" name="nummer" required class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
                     </div>
-                </form>
-            </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">E-mailadres</label>
+                        <input type="email" name="email" required class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="col-span-3">
+                        <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">Straatnaam</label>
+                        <input type="text" name="straatnaam" required class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">Nr.</label>
+                        <input type="text" name="huisnummer" required class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">Postcode</label>
+                        <input type="text" name="postcode" required class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">Woonplaats</label>
+                        <input type="text" name="woonplaats" required class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <label class="block text-xs font-medium text-gray-400 light-text-gray-700 mb-1">Betaalmethode</label>
+                    <select name="betaalmethode" class="w-full bg-gray-900 light-bg-gray-50 border border-gray-700 light-border-gray-200 rounded-xl p-3 text-white light-text-gray-900 outline-none focus:border-blue-500 transition-colors">
+                        <option value="iDEAL">iDEAL | Wero</option>
+                        <option value="PayPal">PayPal</option>
+                        <option value="Creditcard">Creditcard</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-between pt-6 border-t border-gray-800 light-border-gray-200">
+                    <p class="text-xl font-bold text-white light-text-gray-900">Totaal: €<?= number_format($totaal, 2, ',', '.') ?></p>
+                    <button type="submit" name="plaats_bestelling" class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-6 rounded-xl transition-all">
+                        Bestellen
+                    </button>
+                </div>
+            </form>
         <?php endif; ?>
-    </div>
+    </main>
 
 </body>
-
 </html>

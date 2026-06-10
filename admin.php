@@ -7,147 +7,94 @@ if (!isset($_SESSION['user']) || $_SESSION['user'] !== 'Admin') {
     exit();
 }
 
-$tab = isset($_GET['tab']) ? $_GET['tab'] : 'producten';
+$theme = isset($_SESSION['theme']) ? $_SESSION['theme'] : 'dark';
 
-$bestellingen = [];
-$producten_lijst = [];
-
-if ($tab === 'bestellingen') {
-    $query = $pdo->query("SELECT * FROM bestellingen ORDER BY id DESC");
-    $bestellingen = $query->fetchAll();
-} else {
-    $query = $pdo->query("SELECT * FROM items ORDER BY id DESC");
-    $producten_lijst = $query->fetchAll();
+if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
+    $stmt = $pdo->prepare("DELETE FROM items WHERE id = :id");
+    $stmt->execute([':id' => $_GET['id']]);
+    header("Location: admin.php?tab=producten");
+    exit();
 }
+
+if (isset($_POST['add_product'])) {
+    $stmt = $pdo->prepare("INSERT INTO items (naam, prijs, foto_url, rating) VALUES (:naam, :prijs, :foto_url, :rating)");
+    $stmt->execute([
+        ':naam' => $_POST['naam'],
+        ':prijs' => $_POST['prijs'],
+        ':foto' => $_POST['foto_url'],
+        ':rating' => $_POST['rating']
+    ]);
+    header("Location: admin.php?tab=toevoegen");
+    exit();
+}
+
+$tab = isset($_GET['tab']) ? $_GET['tab'] : 'producten';
+$bestellingen = ($tab === 'bestellingen') ? $pdo->query("SELECT * FROM bestellingen ORDER BY id DESC")->fetchAll() : [];
+$producten_lijst = ($tab === 'producten') ? $pdo->query("SELECT * FROM items ORDER BY id DESC")->fetchAll() : [];
 ?>
 <!DOCTYPE html>
-<html lang="nl" class="h-full bg-gray-900 text-gray-100">
-
+<html lang="nl" class="h-full <?= $theme === 'light' ? '' : 'dark' ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechShop - Admin Panel</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
-<body class="bg-gray-900 text-gray-100 p-8">
-
+<body class="<?= $theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-gray-900 text-gray-100' ?> p-8 transition-colors duration-200">
     <div class="max-w-6xl mx-auto space-y-6">
-
-        <div class="flex justify-between items-center border-b border-gray-800 pb-4">
-            <div>
-                <h1 class="text-3xl font-extrabold text-white">Admin Panel</h1>
-                <p class="text-sm text-gray-400">Welkom terug, Admin</p>
+        <div class="flex justify-between items-center border-b pb-4 <?= $theme === 'light' ? 'border-gray-200' : 'border-gray-800' ?>">
+            <div><h1 class="text-3xl font-extrabold">Admin Panel</h1><p class="text-sm opacity-70">Welkom terug, Admin</p></div>
+            <div class="flex gap-4">
+                <a href="home.php" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm">Naar Webshop</a>
             </div>
-            <a href="home.php" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-xl text-sm transition-colors">
-                Naar Webshop
-            </a>
         </div>
 
-        <div class="flex gap-4 border-b border-gray-800 pb-2">
-            <a href="admin.php?tab=producten" class="px-4 py-2 rounded-lg font-semibold text-sm transition-colors <?= $tab === 'producten' ? 'bg-blue-600 text-white' : 'bg-gray-950 text-gray-400 hover:text-white' ?>">
-                Producten Beheren
-            </a>
-            <a href="admin.php?tab=bestellingen" class="px-4 py-2 rounded-lg font-semibold text-sm transition-colors <?= $tab === 'bestellingen' ? 'bg-blue-600 text-white' : 'bg-gray-950 text-gray-400 hover:text-white' ?>">
-                Bestellingen Bekijken
-            </a>
+        <div class="flex gap-4 border-b pb-2 <?= $theme === 'light' ? 'border-gray-200' : 'border-gray-800' ?>">
+            <a href="admin.php?tab=producten" class="px-4 py-2 rounded-lg font-semibold text-sm <?= $tab === 'producten' ? 'bg-blue-600 text-white' : ($theme === 'light' ? 'bg-gray-200' : 'bg-gray-800') ?>">Producten Beheren</a>
+            <a href="admin.php?tab=toevoegen" class="px-4 py-2 rounded-lg font-semibold text-sm <?= $tab === 'toevoegen' ? 'bg-blue-600 text-white' : ($theme === 'light' ? 'bg-gray-200' : 'bg-gray-800') ?>">Product Toevoegen</a>
+            <a href="admin.php?tab=bestellingen" class="px-4 py-2 rounded-lg font-semibold text-sm <?= $tab === 'bestellingen' ? 'bg-blue-600 text-white' : ($theme === 'light' ? 'bg-gray-200' : 'bg-gray-800') ?>">Bestellingen Bekijken</a>
         </div>
 
         <?php if ($tab === 'producten'): ?>
-            <div class="bg-gray-950 p-6 rounded-2xl border border-gray-800 space-y-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-white">Je Producten</h2>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead>
-                            <tr class="text-gray-500 border-b border-gray-800">
-                                <th class="pb-2">Foto</th>
-                                <th class="pb-2">Naam</th>
-                                <th class="pb-2 text-right">Prijs</th>
+            <div class="p-6 rounded-2xl border <?= $theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-950 border-gray-800' ?>">
+                <table class="w-full text-left text-sm">
+                    <thead><tr class="opacity-70 border-b <?= $theme === 'light' ? 'border-gray-200' : 'border-gray-800' ?>"><th class="pb-2">Foto</th><th class="pb-2">Naam</th><th class="pb-2 text-right">Prijs</th><th class="pb-2 text-center">Actie</th></tr></thead>
+                    <tbody>
+                        <?php foreach ($producten_lijst as $p): ?>
+                            <tr class="border-b <?= $theme === 'light' ? 'border-gray-100' : 'border-gray-800/50' ?>">
+                                <td class="py-2"><img src="<?= $p['foto_url'] ?>" class="h-10 w-10 object-contain rounded bg-white p-0.5"></td>
+                                <td class="py-2 font-medium"><?= htmlspecialchars($p['naam']) ?></td>
+                                <td class="py-2 text-right">€<?= number_format($p['prijs'], 2, ',', '.') ?></td>
+                                <td class="py-2 text-center"><a href="admin.php?action=delete&id=<?= $p['id'] ?>" class="text-red-500">Verwijder</a></td>
                             </tr>
-                        </thead>
-                        <tbody class="text-gray-300 divide-y divide-gray-900">
-                            <?php foreach ($producten_lijst as $p): ?>
-                                <tr>
-                                    <td class="py-2"><img src="<?= $p['foto_url'] ?>" class="h-10 w-10 object-contain rounded bg-white p-0.5"></td>
-                                    <td class="py-2 font-medium text-white"><?= htmlspecialchars($p['naam']) ?></td>
-                                    <td class="py-2 text-right font-mono">€<?= number_format($p['prijs'], 2, ',', '.') ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php elseif ($tab === 'toevoegen'): ?>
+            <div class="p-8 rounded-2xl border <?= $theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-950 border-gray-800' ?> max-w-lg">
+                <form method="POST" class="space-y-4">
+                    <input type="text" name="naam" placeholder="Naam" required class="w-full p-3 rounded-xl border <?= $theme === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-gray-900 border-gray-700' ?>">
+                    <input type="number" step="0.01" name="prijs" placeholder="Prijs" required class="w-full p-3 rounded-xl border <?= $theme === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-gray-900 border-gray-700' ?>">
+                    <input type="text" name="foto_url" placeholder="Foto URL" required class="w-full p-3 rounded-xl border <?= $theme === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-gray-900 border-gray-700' ?>">
+                    <input type="number" min="1" max="5" name="rating" placeholder="Rating (1-5)" required class="w-full p-3 rounded-xl border <?= $theme === 'light' ? 'bg-gray-50 border-gray-200' : 'bg-gray-900 border-gray-700' ?>">
+                    <button type="submit" name="add_product" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold">Toevoegen</button>
+                </form>
+            </div>
+        <?php elseif ($tab === 'bestellingen'): ?>
+            <div class="space-y-6">
+                <?php foreach ($bestellingen as $b): ?>
+                    <div class="p-6 rounded-2xl border <?= $theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-950 border-gray-800' ?>">
+                        <h2 class="text-lg font-bold text-blue-500">Bestelling #<?= $b['id'] ?></h2>
+                        <p class="text-sm">Klant: <?= htmlspecialchars($b['voornaam'].' '.$b['achternaam']) ?></p>
+                        <p class="text-sm">Adres: <?= htmlspecialchars($b['straatnaam'].' '.$b['huisnummer'].', '.$b['postcode'].' '.$b['woonplaats']) ?></p>
+                        <p class="text-sm">Email: <?= htmlspecialchars($b['email']) ?></p>
+                        <p class="text-sm">Nummer: <?= htmlspecialchars($b['telefoonnummer']) ?></p>
+                        <p class="text-sm">Methode: <?= htmlspecialchars($b['betaalmethode']) ?></p>
+                        <p class="text-sm font-bold mt-2">Totaal: €<?= number_format($b['totaal_bedrag'], 2, ',', '.') ?></p>
+                    </div>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
-
-        <?php if ($tab === 'bestellingen'): ?>
-            <?php if (empty($bestellingen)): ?>
-                <p class="text-gray-400">Er zijn nog geen bestellingen geplaatst.</p>
-            <?php else: ?>
-
-                <div class="space-y-6">
-                    <?php foreach ($bestellingen as $bestelling): ?>
-                        <div class="bg-gray-950 p-6 rounded-2xl border border-gray-800 space-y-4">
-
-                            <div class="flex flex-col md:flex-row justify-between border-b border-gray-800 pb-4 gap-2">
-                                <div>
-                                    <h2 class="text-xl font-bold text-blue-400">Bestelling #<?= $bestelling['id'] ?></h2>
-                                    <p class="text-sm text-gray-400">Klant: <?= htmlspecialchars($bestelling['voornaam']) . " " . htmlspecialchars($bestelling['achternaam']) ?> (Account: <?= htmlspecialchars($bestelling['gebruikersnaam']) ?>)</p>
-                                </div>
-                                <div class="text-left md:text-right text-sm text-gray-400">
-                                    <p>Adres: <?= htmlspecialchars($bestelling['straatnaam']) . " " . htmlspecialchars($bestelling['huisnummer']) ?>, <?= htmlspecialchars($bestelling['postcode']) ?> <?= htmlspecialchars($bestelling['woonplaats']) ?></p>
-                                    <p>Tel: <?= htmlspecialchars($bestelling['telefoonnummer']) ?> | E-mail: <?= htmlspecialchars($bestelling['email']) ?></p>
-                                </div>
-                            </div>
-
-                            <?php
-                            $itemsQuery = $pdo->prepare("
-                                SELECT bestelling_items.*, items.naam 
-                                FROM bestelling_items 
-                                JOIN items ON bestelling_items.item_id = items.id 
-                                WHERE bestelling_items.bestelling_id = :bestelling_id
-                            ");
-                            $itemsQuery->execute([':bestelling_id' => $bestelling['id']]);
-                            $producten_in_bestelling = $itemsQuery->fetchAll();
-                            ?>
-
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-sm">
-                                    <thead>
-                                        <tr class="text-gray-500 border-b border-gray-800">
-                                            <th class="pb-2">Product</th>
-                                            <th class="pb-2 text-center">Aantal</th>
-                                            <th class="pb-2 text-right">Prijs per stuk</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="text-gray-300 divide-y divide-gray-900">
-                                        <?php foreach ($producten_in_bestelling as $p): ?>
-                                            <tr>
-                                                <td class="py-2"><?= htmlspecialchars($p['naam']) ?></td>
-                                                <td class="py-2 text-center font-mono"><?= $p['aantal'] ?>x</td>
-                                                <td class="py-2 text-right font-mono">€<?= number_format($p['prijs'], 2, ',', '.') ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div class="flex justify-between items-center pt-2 border-t border-gray-800 text-sm">
-                                <p class="text-gray-400">Betaalmethode: <span class="text-gray-200 font-semibold"><?= htmlspecialchars($bestelling['betaalmethode']) ?></span></p>
-                                <p class="text-lg font-bold text-white">Totaal betaald: €<?= number_format($bestelling['totaal_bedrag'], 2, ',', '.') ?></p>
-                            </div>
-
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-            <?php endif; ?>
-        <?php endif; ?>
-
     </div>
-
 </body>
-
 </html>
