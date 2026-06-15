@@ -21,7 +21,7 @@ if (isset($_POST['add_product'])) {
     $stmt->execute([
         ':naam' => $_POST['naam'],
         ':prijs' => $_POST['prijs'],
-        ':foto' => $_POST['foto_url'],
+        ':foto_url' => $_POST['foto_url'],
         ':rating' => $_POST['rating']
     ]);
     header("Location: admin.php?tab=toevoegen");
@@ -34,15 +34,20 @@ $producten_lijst = ($tab === 'producten') ? $pdo->query("SELECT * FROM items ORD
 ?>
 <!DOCTYPE html>
 <html lang="nl" class="h-full <?= $theme === 'light' ? '' : 'dark' ?>">
+
 <head>
     <meta charset="UTF-8">
     <title>TechShop - Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="<?= $theme === 'light' ? 'bg-gray-50 text-gray-900' : 'bg-gray-900 text-gray-100' ?> p-8 transition-colors duration-200">
     <div class="max-w-6xl mx-auto space-y-6">
         <div class="flex justify-between items-center border-b pb-4 <?= $theme === 'light' ? 'border-gray-200' : 'border-gray-800' ?>">
-            <div><h1 class="text-3xl font-extrabold">Admin Panel</h1><p class="text-sm opacity-70">Welkom terug, Admin</p></div>
+            <div>
+                <h1 class="text-3xl font-extrabold">Admin Panel</h1>
+                <p class="text-sm opacity-70">Welkom terug, Admin</p>
+            </div>
             <div class="flex gap-4">
                 <a href="home.php" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm">Naar Webshop</a>
             </div>
@@ -57,7 +62,14 @@ $producten_lijst = ($tab === 'producten') ? $pdo->query("SELECT * FROM items ORD
         <?php if ($tab === 'producten'): ?>
             <div class="p-6 rounded-2xl border <?= $theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-950 border-gray-800' ?>">
                 <table class="w-full text-left text-sm">
-                    <thead><tr class="opacity-70 border-b <?= $theme === 'light' ? 'border-gray-200' : 'border-gray-800' ?>"><th class="pb-2">Foto</th><th class="pb-2">Naam</th><th class="pb-2 text-right">Prijs</th><th class="pb-2 text-center">Actie</th></tr></thead>
+                    <thead>
+                        <tr class="opacity-70 border-b <?= $theme === 'light' ? 'border-gray-200' : 'border-gray-800' ?>">
+                            <th class="pb-2">Foto</th>
+                            <th class="pb-2">Naam</th>
+                            <th class="pb-2 text-right">Prijs</th>
+                            <th class="pb-2 text-center">Actie</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($producten_lijst as $p): ?>
                             <tr class="border-b <?= $theme === 'light' ? 'border-gray-100' : 'border-gray-800/50' ?>">
@@ -85,8 +97,8 @@ $producten_lijst = ($tab === 'producten') ? $pdo->query("SELECT * FROM items ORD
                 <?php foreach ($bestellingen as $b): ?>
                     <div class="p-6 rounded-2xl border <?= $theme === 'light' ? 'bg-white border-gray-200' : 'bg-gray-950 border-gray-800' ?>">
                         <h2 class="text-lg font-bold text-blue-500">Bestelling #<?= $b['id'] ?></h2>
-                        <p class="text-sm">Klant: <?= htmlspecialchars($b['voornaam'].' '.$b['achternaam']) ?></p>
-                        <p class="text-sm">Adres: <?= htmlspecialchars($b['straatnaam'].' '.$b['huisnummer'].', '.$b['postcode'].' '.$b['woonplaats']) ?></p>
+                        <p class="text-sm">Klant: <?= htmlspecialchars($b['voornaam'] . ' ' . $b['achternaam']) ?></p>
+                        <p class="text-sm">Adres: <?= htmlspecialchars($b['straatnaam'] . ' ' . $b['huisnummer'] . ', ' . $b['postcode'] . ' ' . $b['woonplaats']) ?></p>
                         <p class="text-sm">Email: <?= htmlspecialchars($b['email']) ?></p>
                         <p class="text-sm">Nummer: <?= htmlspecialchars($b['telefoonnummer']) ?></p>
                         <p class="text-sm">Methode: <?= htmlspecialchars($b['betaalmethode']) ?></p>
@@ -97,4 +109,5 @@ $producten_lijst = ($tab === 'producten') ? $pdo->query("SELECT * FROM items ORD
         <?php endif; ?>
     </div>
 </body>
+
 </html>

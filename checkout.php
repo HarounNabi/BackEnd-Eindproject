@@ -88,14 +88,37 @@ if (isset($_POST['plaats_bestelling'])) {
     <title>TechShop - Afrekenen</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style type="text/css">
-        :has(#theme-toggle-input:checked) .light-bg-white { background-color: #ffffff; }
-        :has(#theme-toggle-input:checked) .light-bg-gray-50 { background-color: #f9fafb; }
-        :has(#theme-toggle-input:checked) .light-text-gray-900 { color: #111827; }
-        :has(#theme-toggle-input:checked) .light-text-gray-700 { color: #374151; }
-        :has(#theme-toggle-input:checked) .light-border-gray-200 { border-color: #e5e7eb; }
-        :has(#theme-toggle-input:checked) .light-text-black { color: #000000; }
-        :has(#theme-toggle-input:checked) .light-hover-text-black:hover { color: #000000; }
-        :has(#theme-toggle-input:checked) .light-hover-bg-gray-100:hover { background-color: #f3f4f6; }
+        :has(#theme-toggle-input:checked) .light-bg-white {
+            background-color: #ffffff;
+        }
+
+        :has(#theme-toggle-input:checked) .light-bg-gray-50 {
+            background-color: #f9fafb;
+        }
+
+        :has(#theme-toggle-input:checked) .light-text-gray-900 {
+            color: #111827;
+        }
+
+        :has(#theme-toggle-input:checked) .light-text-gray-700 {
+            color: #374151;
+        }
+
+        :has(#theme-toggle-input:checked) .light-border-gray-200 {
+            border-color: #e5e7eb;
+        }
+
+        :has(#theme-toggle-input:checked) .light-text-black {
+            color: #000000;
+        }
+
+        :has(#theme-toggle-input:checked) .light-hover-text-black:hover {
+            color: #000000;
+        }
+
+        :has(#theme-toggle-input:checked) .light-hover-bg-gray-100:hover {
+            background-color: #f3f4f6;
+        }
     </style>
 </head>
 
@@ -110,7 +133,11 @@ if (isset($_POST['plaats_bestelling'])) {
             </a>
             <nav class="flex items-center gap-6">
                 <a href="home.php" class="text-sm font-medium text-gray-200 light-text-gray-700 hover:text-white light-hover-text-black transition-colors">Producten</a>
-                <label for="theme-toggle-input" class="cursor-pointer text-lg p-2 rounded-xl hover:bg-gray-900/50 light-hover-bg-gray-100 transition-colors select-none">🌓</label>
+                <label for="theme-toggle-input" class="cursor-pointer text-lg p-2 rounded-xl hover:bg-gray-900/50 light-hover-bg-gray-100 transition-colors select-none">
+                    <div class="scale-185">
+                        ☯︎
+                    </div>
+                </label>
             </nav>
         </div>
     </header>
@@ -195,4 +222,5 @@ if (isset($_POST['plaats_bestelling'])) {
     </main>
 
 </body>
+
 </html>

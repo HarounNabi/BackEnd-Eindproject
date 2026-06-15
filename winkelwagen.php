@@ -88,7 +88,9 @@ $totaal = 0;
                 <a href="winkelwagen.php" class="text-sm font-medium text-gray-200 light-text-gray-700 hover:text-white transition-colors flex items-center gap-1">🛒 Winkelwagen</a>
 
                 <label for="theme-toggle-input" class="cursor-pointer text-lg p-2 rounded-xl hover:bg-gray-900/50 light-hover-bg-gray-100 transition-colors select-none">
-                    🌓
+                    <div class="scale-185">
+                        ☯︎
+                    </div>
                 </label>
 
                 <?php if (isset($_SESSION['user'])): ?>
