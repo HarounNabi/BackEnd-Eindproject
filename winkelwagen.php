@@ -81,7 +81,7 @@ $totaal = 0;
 
             <nav class="flex items-center gap-6">
                 <?php if (isset($_SESSION['user']) && $_SESSION['user'] == 'Admin'): ?>
-                    <a href="admin.php" class="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5">⚙ Admin Panel</a>
+                    <a href="admin.php" class="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5">☰ Admin Panel</a>
                 <?php endif; ?>
 
                 <a href="home.php" class="text-sm font-medium text-gray-200 light-text-gray-700 hover:text-white transition-colors">Producten</a>
