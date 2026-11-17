@@ -1,0 +1,51 @@
+.bg-main_dark {
+    background-color: #111827;
+}
+.bg-card_dark {
+    background-color: #030712;
+}
+.text-main_dark {
+    color: #f3f4f6;
+}
+.text-muted_dark {
+    color: #9ca3af;
+}
+.border_dark {
+    border-color: #1f2937;
+}
+.hover_dark:hover {
+    background-color: #111827;
+}
+
+.bg-main_light {
+    background-color: #f9fafb;
+}
+.bg-card_light {
+    background-color: #ffffff;
+}
+.text-main_light {
+    color: #111827;
+}
+.text-muted_light {
+    color: #374151;
+}
+.border_light {
+    border-color: #e5e7eb;
+}
+.hover_light:hover {
+    background-color: #f3f4f6;
+}
+
+body,
+header,
+main,
+footer,
+div,
+table,
+tr,
+td {
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}

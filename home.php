@@ -7,7 +7,36 @@ if (!isset($_SESSION['user'])) {
     exit();
 }
 
-$all_items = $pdo->query("SELECT * FROM items");
+if (!isset($_SESSION['theme'])) {
+    $_SESSION['theme'] = 'dark';
+}
+
+if (isset($_GET['action']) && $_GET['action'] == 'toggle_theme') {
+    $_SESSION['theme'] = ($_SESSION['theme'] == 'dark') ? 'light' : 'dark';
+    header("Location: home.php");
+    exit();
+}
+
+if (isset($_POST['add_to_cart'])) {
+    $product_id = intval($_POST['product_id']);
+
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = array();
+    }
+
+    if (isset($_SESSION['cart'][$product_id])) {
+        $_SESSION['cart'][$product_id] += 1;
+    } else {
+        $_SESSION['cart'][$product_id] = 1;
+    }
+    header("Location: home.php");
+    exit();
+}
+
+$query = $pdo->query("SELECT * FROM items");
+$products = $query->fetchAll();
+
+$suffix = '_' . $_SESSION['theme'];
 ?>
 <!DOCTYPE html>
 <html lang="nl" class="h-full">
@@ -15,44 +44,14 @@ $all_items = $pdo->query("SELECT * FROM items");
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechShop - Home</title>
+    <title>TechShop - Hardware & Gaming Gear</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <style type="text/css">
-        :has(#theme-toggle-input:checked) .light-bg-white {
-            background-color: #ffffff;
-        }
-
-        :has(#theme-toggle-input:checked) .light-bg-gray-50 {
-            background-color: #f9fafb;
-        }
-
-        :has(#theme-toggle-input:checked) .light-text-gray-900 {
-            color: #111827;
-        }
-
-        :has(#theme-toggle-input:checked) .light-text-gray-700 {
-            color: #374151;
-        }
-
-        :has(#theme-toggle-input:checked) .light-text-black {
-            color: #000000;
-        }
-
-        :has(#theme-toggle-input:checked) .light-border-gray-200 {
-            border-color: #e5e7eb;
-        }
-
-        :has(#theme-toggle-input:checked) .light-hover-bg-gray-100:hover {
-            background-color: #f3f4f6;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="flex flex-col min-h-screen bg-gray-900 text-gray-100 light-bg-gray-50 light-text-gray-900 transition-colors duration-200">
+<body class="flex flex-col min-h-screen bg-main<?= $suffix ?> text-main<?= $suffix ?> transition-colors duration-200">
 
-    <input type="checkbox" id="theme-toggle-input" class="hidden">
-
-    <header class="bg-gray-950 light-bg-white border-b border-gray-800 light-border-gray-200 fixed top-0 left-0 w-full z-50 transition-colors duration-200">
+    <header class="bg-card<?= $suffix ?> border-b border<?= $suffix ?> fixed top-0 left-0 w-full z-50 transition-colors duration-200">
         <div class="w-full px-8 h-20 flex items-center justify-between">
 
             <a href="home.php" class="flex items-center shrink-0">
@@ -61,21 +60,24 @@ $all_items = $pdo->query("SELECT * FROM items");
 
             <nav class="flex items-center gap-6">
                 <?php if (isset($_SESSION['user']) && $_SESSION['user'] == 'Admin'): ?>
-                    <a href="admin.php" class="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5">☰ Admin Panel</a>
+                    <a href="admin.php" class="text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1.5"> Admin Panel</a>
                 <?php endif; ?>
 
-                <a href="home.php" class="text-sm font-medium text-gray-200 light:text-gray-700 light-text-gray-700 hover:text-white light-hover-text-black transition-colors">Producten</a>
-                <a href="winkelwagen.php" class="text-sm font-medium text-gray-200 light:text-gray-700 light-text-gray-700 hover:text-white light-hover-text-black transition-colors flex items-center gap-1">🛒 Winkelwagen</a>
+                <a href="home.php" class="text-sm font-medium text-main<?= $suffix ?> hover:opacity-80 transition-colors">Producten</a>
+                <a href="winkelwagen.php" class="text-sm font-medium text-main<?= $suffix ?> hover:opacity-80 transition-colors flex items-center gap-1">
+                    🛒 Winkelwagen
+                    <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                        <?= isset($_SESSION['cart']) ? array_sum($_SESSION['cart']) : 0; ?>
+                    </span>
+                </a>
 
-                <label for="theme-toggle-input" class="cursor-pointer text-lg p-2 rounded-xl hover:bg-gray-900/50 light-hover-bg-gray-100 transition-colors select-none">
-                    <div class="scale-185">
-                        ☯︎
-                    </div>
-                </label>
+                <a href="home.php?action=toggle_theme" class="cursor-pointer text-lg p-2 rounded-xl hover<?= $suffix ?> transition-colors select-none scale-185">
+                    ☯︎
+                </a>
 
                 <?php if (isset($_SESSION['user'])): ?>
-                    <span class="text-xs bg-gray-900 light-bg-gray-50 border border-gray-800 light-border-gray-200 px-3 py-1.5 rounded-full text-gray-400 light-text-gray-700">
-                        Gebruiker: <b class="text-gray-200 light-text-gray-900"><?= htmlspecialchars($_SESSION['user']) ?></b>
+                    <span class="text-xs bg-main<?= $suffix ?> border border<?= $suffix ?> px-3 py-1.5 rounded-full text-muted<?= $suffix ?>">
+                        Gebruiker: <b class="text-main<?= $suffix ?>"><?= htmlspecialchars($_SESSION['user']) ?></b>
                     </span>
                     <a href="loguit.php" class="text-sm font-medium text-red-400 hover:text-red-600 transition-colors">Uitloggen</a>
                 <?php endif; ?>
@@ -84,76 +86,68 @@ $all_items = $pdo->query("SELECT * FROM items");
         </div>
     </header>
 
-    <main class="grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-10">
-        <?php if (isset($_GET['id'])): ?>
-            <?php
-            $id = $_GET['id'];
-            $query = $pdo->prepare("SELECT * FROM items WHERE id = :id");
-            $query->execute([':id' => $id]);
-            $item = $query->fetch();
-            ?>
-            <div class="bg-gray-950 light-bg-white rounded-2xl border border-gray-800 light-border-gray-200 p-6 md:p-10 shadow-xl max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10 transition-colors duration-200">
-                <div class="bg-gray-900 light-bg-gray-50 rounded-xl p-6 flex items-center justify-center border border-gray-850 light-border-gray-200 aspect-square">
-                    <img src="<?= $item['foto_url'] ?>" class="max-h-full max-w-full object-contain rounded-lg">
-                </div>
-                <div class="flex flex-col justify-between py-2">
-                    <div>
-                        <h2 class="text-3xl font-extrabold text-white light-text-gray-900 tracking-tight mb-4"><?= htmlspecialchars($item['naam']) ?></h2>
-                        <div class="flex items-center gap-2 mb-6">
-                            <span class="text-amber-400 text-lg">★</span>
-                            <span class="text-sm font-semibold text-gray-300 light-text-gray-700"><?= $item['rating'] ?? 'N/A' ?> / 5.0</span>
-                        </div>
-                        <p class="text-4xl font-black text-blue-400 mb-8">€<?= number_format($item['prijs'], 2, ',', '.') ?></p>
-                    </div>
+    <main class="grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 px">
 
-                    <form action="winkelwagen.php" method="POST" class="space-y-4">
-                        <input type="hidden" name="product_id" value="<?= $item['id'] ?>">
-                        <div class="flex items-center gap-3">
-                            <label class="text-sm font-medium text-gray-400 light-text-gray-700">Aantal:</label>
-                            <input type="number" name="aantal" value="1" min="1" class="w-20 bg-gray-900 light-bg-white border border-gray-700 light-border-gray-200 rounded-xl px-3 py-2 text-white light-text-gray-900 font-semibold text-center focus:outline-none focus:border-blue-500">
-                        </div>
-                        <button type="submit" name="add_to_cart" class="w-full cursor-pointer bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg shadow-blue-600/10 transition-all text-center">
-                            In Winkelwagen
-                        </button>
-                    </form>
-
-                    <a href="home.php" class="mt-6 text-sm text-gray-500 hover:text-gray-400 transition-colors block text-center md:text-left">← Terug naar het overzicht</a>
-                </div>
-            </div>
-        <?php else: ?>
-            <h2 class="text-3xl font-extrabold tracking-tight text-white light-text-gray-900 mb-8 transition-colors duration-200">
-                Onze Producten
+        <div class="mb-12 text-center sm:text-left">
+            <h2 class="text-3xl font-extrabold tracking-tight sm:text-4xl bg-linear-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
+                Tech & goods
             </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                <?php while ($item = $all_items->fetch()): ?>
-                    <div class="bg-gray-950 light-bg-white rounded-2xl border border-gray-800 light-border-gray-200 p-5 flex flex-col justify-between shadow-md hover:shadow-xl transition-all group duration-200">
-                        <div>
-                            <div class="bg-gray-900 light-bg-gray-50 rounded-xl p-4 flex items-center justify-center border border-gray-850 light-border-gray-200 h-48 mb-4 overflow-hidden">
-                                <img src="<?= $item['foto_url'] ?>" class="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300">
+            <p class="mt-3 text-base text-muted<?= $suffix ?> max-w-md">
+                Upgrade je setup met de nieuwste items
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <?php foreach ($products as $product): ?>
+                <div class="bg-card<?= $suffix ?> rounded-2xl border border<?= $suffix ?> overflow-hidden shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex flex-col h-full group">
+
+                    <div class="relative w-full pt-[75%] bg-transparent overflow-hidden p-6 flex items-center justify-center shrink-0">
+                        <img src="<?= htmlspecialchars($product['foto_url']) ?>" alt="<?= htmlspecialchars($product['naam']) ?>" class="absolute max-w-[85%] max-h-[85%] object-contain group-hover:scale-105 transition-transform duration-300">
+                    </div>
+
+                    <div class="p-6 flex flex-col grow">
+                        <div class="flex items-start justify-between gap-4 mb-3">
+                            <h3 class="text-base font-bold tracking-tight line-clamp-2 min-h-12 grow">
+                                <?= htmlspecialchars($product['naam']) ?>
+                            </h3>
+                            <div class="flex items-center gap-1 bg-main<?= $suffix ?> border border<?= $suffix ?> px-2 py-1 rounded-lg shrink-0">
+                                <span class="text-amber-400 text-xs font-bold">★</span>
+                                <span class="text-xs font-semibold font-mono text-main<?= $suffix ?>"><?= number_format($product['rating'], 1) ?></span>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-200 light-text-gray-900 line-clamp-2 mb-2 group-hover:text-white light-group-hover:text-black"><?= htmlspecialchars($item['naam']) ?></h3>
                         </div>
-                        <div class="mt-4">
-                            <p class="text-xl font-black text-blue-400 mb-4">€<?= number_format($item['prijs'], 2, ',', '.') ?></p>
-                            <a href="home.php?id=<?= $item['id'] ?>" class="w-full block bg-gray-900 light-bg-gray-50 hover:bg-gray-850 border border-gray-700 light-border-gray-200 text-gray-200 light-text-gray-700 hover:text-white font-medium py-2.5 px-4 rounded-xl text-center text-sm transition-all">
-                                Bekijk Product
-                            </a>
+
+                        <div class="mt-auto pt-4 border-t border<?= $suffix ?> flex items-center justify-between gap-4">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-muted<?= $suffix ?> font-medium uppercase tracking-wider">Prijs</span>
+                                <span class="text-xl font-black text-blue-500 font-mono">€<?= number_format($product['prijs'], 2, ',', '.') ?></span>
+                            </div>
+
+                            <form action="home.php" method="POST">
+                                <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
+                                <button type="submit" name="add_to_cart" class="cursor-pointer bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-600/10 transition-all text-sm flex items-center gap-1.5">
+                                    <span>In Wagen</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
-                <?php endwhile; ?>
-            </div>
-        <?php endif; ?>
+
+                </div>
+            <?php endforeach; ?>
+        </div>
+
     </main>
-    <footer class="bg-gray-950 light-bg-white border-t border-gray-800 light-border-gray-200 py-6 mt-auto transition-colors duration-200">
-        <div class="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 light-text-gray-600">
+
+    <footer class="bg-card<?= $suffix ?> border-t border<?= $suffix ?> py-6 mt-auto transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted<?= $suffix ?>">
             <p>&copy; <?= date("Y"); ?> TechShop. Alle rechten voorbehouden.</p>
             <div class="flex gap-6">
-                <a href="#" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Algemene Voorwaarden</a>
-                <a href="#" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Privacybeleid</a>
-                <a href="mailto:haroun.9707@gmail.com" class="hover:text-gray-300 light:hover:text-gray-900 transition-colors">Contact</a>
+                <a href="#" class="hover:text-gray-300 transition-colors">Algemene Voorwaarden</a>
+                <a href="#" class="hover:text-gray-300 transition-colors">Privacybeleid</a>
+                <a href="mailto:haroun.9707@gmail.com" class="hover:text-gray-300 transition-colors">Contact</a>
             </div>
         </div>
     </footer>
+
 </body>
 
 </html>
